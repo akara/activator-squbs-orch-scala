@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+    <name>akarasqt1serv</name>
+    <type>Service</type>
+    <organization>paypal</organization>
+    <stackType>Squbs</stackType>
+    <public>false</public>
+    <!-- Mandatory field -->
+    <description>Sample Squbs Project</description>
+    <lifecycleState>Deployed</lifecycleState>
+
+    <webService-List>
+        <webService>
+            <description>Akarasqt1servservice</description>
+            <lifecycleState>Deployed</lifecycleState>
+            <name>akarasqt1serv.events.v0</name>
+            <svcMapping-List>
+                <svcMapping>/akarasqt1serv/events</svcMapping>
+            </svcMapping-List>
+        </webService>
+    </webService-List>
+</application>

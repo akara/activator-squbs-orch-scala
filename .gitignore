@@ -1,0 +1,20 @@
+*.class
+*.log
+.cache
+
+# sbt specific
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+squbsconfig/
+perfmonMetric.txt
+
+# Scala-IDE specific
+.scala_dependencies
+
+# IntelliJ specific
+.idea/
+.metadata/
