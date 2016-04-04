@@ -1,12 +1,13 @@
 package com.paypal.myorg.akarasqt1serv.cube
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props, Status}
 import akka.util.Timeout
 import com.paypal.myorg.akarasqt1serv.msgs.{OrchestrationRequest, OrchestrationResponse, OrchestrationTimeout}
+import org.squbs.actorregistry.ActorLookup
+import org.squbs.pattern.orchestration.{OFuture, OPromise, Orchestrator}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
 
 
 class Dispatcher extends Actor {
@@ -15,7 +16,8 @@ class Dispatcher extends Actor {
   }
 }
 
-class ContentOrchestrator extends Orchestrator {
+class ContentOrchestrator extends Actor with Orchestrator {
+  import context.system
 
   expectOnce {
     case request: OrchestrationRequest => orchestrate(request, sender())
@@ -32,26 +34,26 @@ class ContentOrchestrator extends Orchestrator {
       role <- roleF
       content <- contentF
     } {
-      requester ! OrchestrationResponse(Success((role, content)))
+      requester ! OrchestrationResponse(role, content)
       context.stop(self)
     }
 
     // Not so happy cases
     tokenF onFailure {
       case e: Throwable =>
-        requester ! OrchestrationResponse(Failure(e))
+        requester ! Status.Failure(e)
         context.stop(self)
     }
 
     roleF onFailure {
       case e: Throwable =>
-        requester ! OrchestrationResponse(Failure(e))
+        requester ! Status.Failure(e)
         context.stop(self)
     }
 
     contentF onFailure {
       case e: Throwable =>
-        requester ! OrchestrationResponse(Failure(e))
+        requester ! Status.Failure(e)
         context.stop(self)
     }
 
@@ -64,7 +66,7 @@ class ContentOrchestrator extends Orchestrator {
         val message = checks.collect {
           case (future: OFuture[_], name: String) if !future.isCompleted => name
         } .mkString("Timed out waiting for: [", ",", s"] after ${timeout.duration}")
-        requester ! OrchestrationResponse(Failure(OrchestrationTimeout(message)))
+        requester ! Status.Failure(OrchestrationTimeout(message))
         context.stop(self)
     }
   }

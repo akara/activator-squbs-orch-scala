@@ -1,9 +1,7 @@
 package com.paypal.myorg.akarasqt1serv.msgs
 
-import scala.util.Try
-
 case class OrchestrationRequest(user: String, password: String, resource: String)
-case class OrchestrationResponse(result: Try[(String, String)])
+case class OrchestrationResponse(role: String, content: String)
 
 case class AuthenticationFailed(msg: String) extends Exception(msg)
 case class AuthorizationFailed(msg: String) extends Exception(msg)

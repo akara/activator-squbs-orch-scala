@@ -6,13 +6,17 @@
  */
 package com.paypal.myorg.akarasqt1serv.svc
 
-import akka.actor.Props
+import akka.pattern.AskTimeoutException
+import akka.util.Timeout
 import com.paypal.myorg.akarasqt1serv.msgs._
+import org.squbs.actorregistry.ActorLookup
 import org.squbs.unicomplex.RouteDefinition
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.routing.Directives._
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
 // this class defines our service behavior independently from the service actor
@@ -43,17 +47,22 @@ class Akarasqt1servSvc extends RouteDefinition {
     } ~
     path("content" / Segment) { resource =>
       get {
-        parameters('user.as[String], 'pass.as[String]) { (user, pass) =>
+        parameters('user, 'pass) { (user, pass) =>
+          import context.system
+          import context.dispatcher
+          implicit val timeout = Timeout(100 milliseconds)
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {
-            case Success(OrchestrationResponse(Success((role, content)))) => complete(content)
-            case Success(OrchestrationResponse(Failure(e @ AuthenticationFailed(msg)))) =>
+            case Success(OrchestrationResponse(role, content)) => complete(content)
+            case Failure(e @ AuthenticationFailed(msg)) =>
               complete(StatusCodes.Unauthorized, msg)
-            case Success(OrchestrationResponse(Failure(e @ AuthorizationFailed(msg)))) =>
+            case Failure(e @ AuthorizationFailed(msg)) =>
               complete(StatusCodes.Unauthorized, msg)
-            case Success(OrchestrationResponse(Failure(e @ InvalidResource(msg)))) =>
+            case Failure(e @ InvalidResource(msg)) =>
               complete(StatusCodes.NotFound, msg)
-            case Success(OrchestrationResponse(Failure(e @ OrchestrationTimeout(msg)))) =>
+            case Failure(e @ OrchestrationTimeout(msg)) =>
               complete(StatusCodes.RequestTimeout, msg)
+            case Failure(e: AskTimeoutException) =>
+              complete(StatusCodes.RequestTimeout, e.getMessage)
             case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage)
             case _ => complete(StatusCodes.InternalServerError, "Unknown error")
           }

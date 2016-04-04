@@ -151,10 +151,8 @@ In the {project}msgs project, create new case class OrchestrationRequest/Orchest
 3. Enter the following content in the class.
 
    ```scala
-   import scala.util.Try
-
    case class OrchestrationRequest(user: String, password: String, resource: String)
-   case class OrchestrationResponse(result: Try[(String, String)])
+   case class OrchestrationResponse(role: String, content: String)
    ```
 
 4. Also create a few known exception cases:
@@ -192,10 +190,11 @@ The orchestration actor is a short-lived actor that only lives one request as it
    * Select `new` -> `Scala Class`
    * Enter class name with package: `com.paypal.myorg.{project}.cube.Orchestrator`
 
-3. Create the ContentOrchestrator actor
+3. Create the ContentOrchestrator actor and `import context.system` as we need to use the `ActorSystem` as context for many calls.
 
    ```scala
    class ContentOrchestrator extends Orchestrator {
+     import context.system
    
    }
    ```
@@ -245,7 +244,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
          role <- roleF
          content <- contentF
        } {
-         requester ! OrchestrationResponse(Success((role, content)))
+         requester ! OrchestrationResponse(role, content)
 
          context.stop(self)
        }
@@ -259,19 +258,19 @@ The orchestration actor is a short-lived actor that only lives one request as it
        // Not so happy cases
        tokenF onFailure {
          case e: Throwable =>
-           requester ! OrchestrationResponse(Failure(e))
+           requester ! Status.Failure(e)
            context.stop(self)
        }
 
        roleF onFailure {
          case e: Throwable =>
-           requester ! OrchestrationResponse(Failure(e))
+           requester ! Status.Failure(e)
            context.stop(self)
        }
 
        contentF onFailure {
          case e: Throwable =>
-           requester ! OrchestrationResponse(Failure(e))
+           requester ! Status.Failure(e)
            context.stop(self)
        }
        ...
@@ -296,7 +295,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
            val message = checks.collect {
              case (future: Future[_], name: String) if !future.isCompleted => name
            } .mkString("Timed out waiting for: [", ",", s"] after ${timeout.duration}")
-           requester ! OrchestrationResponse(Failure(OrchestrationTimeout(message)))
+           requester ! Status.Failure(OrchestrationTimeout(message))
        }
      }   
    ```
@@ -346,15 +345,17 @@ The orchestration actor is a short-lived actor that only lives one request as it
       get {
         parameters('user.as[String], 'pass.as[String]) { (user, pass) =>
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {
-            case Success(OrchestrationResponse(Success((role, content)))) => complete(content)
-            case Success(OrchestrationResponse(Failure(e @ AuthenticationFailed(msg)))) =>
+            case Success(OrchestrationResponse(role, content)) => complete(content)
+            case Failure(e @ AuthenticationFailed(msg)) =>
               complete(StatusCodes.Unauthorized, msg)
-            case Success(OrchestrationResponse(Failure(e @ AuthorizationFailed(msg)))) =>
+            case Failure(e @ AuthorizationFailed(msg)) =>
               complete(StatusCodes.Unauthorized, msg)
-            case Success(OrchestrationResponse(Failure(e @ InvalidResource(msg)))) =>
+            case Failure(e @ InvalidResource(msg)) =>
               complete(StatusCodes.NotFound, msg)
-            case Success(OrchestrationResponse(Failure(e @ OrchestrationTimeout(msg)))) =>
+            case Failure(e @ OrchestrationTimeout(msg)) =>
               complete(StatusCodes.RequestTimeout, msg)
+            case Failure(e: AskTimeoutException) =>
+              complete(StatusCodes.RequestTimeout, e.getMessage)
             case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage)
             case _ => complete(StatusCodes.InternalServerError, "Unknown error")
           }
