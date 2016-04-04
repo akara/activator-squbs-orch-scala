@@ -193,7 +193,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
 3. Create the ContentOrchestrator actor and `import context.system` as we need to use the `ActorSystem` as context for many calls.
 
    ```scala
-   class ContentOrchestrator extends Orchestrator {
+   class ContentOrchestrator extends Actor with Orchestrator {
      import context.system
    
    }
