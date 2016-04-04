@@ -346,19 +346,18 @@ The orchestration actor is a short-lived actor that only lives one request as it
         parameters('user.as[String], 'pass.as[String]) { (user, pass) =>
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {
             case Success(OrchestrationResponse(role, content)) => complete(content)
-            case Failure(e @ AuthenticationFailed(msg)) =>
+            case Failure(AuthenticationFailed(msg)) =>
               complete(StatusCodes.Unauthorized, msg)
-            case Failure(e @ AuthorizationFailed(msg)) =>
+            case Failure(AuthorizationFailed(msg)) =>
               complete(StatusCodes.Unauthorized, msg)
-            case Failure(e @ InvalidResource(msg)) =>
+            case Failure(InvalidResource(msg)) =>
               complete(StatusCodes.NotFound, msg)
-            case Failure(e @ OrchestrationTimeout(msg)) =>
+            case Failure(OrchestrationTimeout(msg)) =>
               complete(StatusCodes.RequestTimeout, msg)
             case Failure(e: AskTimeoutException) =>
               complete(StatusCodes.RequestTimeout, e.getMessage)
             case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage)
-            case _ => complete(StatusCodes.InternalServerError, "Unknown error")
-          }
+            case _ => complete(StatusCodes.InternalServerError, "Unknown error")          }
         }
       }
     }
