@@ -294,7 +294,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
            val checks = Seq(tokenF -> "token", roleF -> "role", contentF -> "content")
            val message = checks.collect {
              case (future: Future[_], name: String) if !future.isCompleted => name
-           } .mkString("Timed out waiting for: [", ",", s"] after ${timeout.duration}")
+           } .mkString("Timed out waiting for: [", ",", s"] after $duration")
            requester ! Status.Failure(OrchestrationTimeout(message))
        }
      }   

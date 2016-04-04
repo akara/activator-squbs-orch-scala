@@ -65,7 +65,7 @@ class ContentOrchestrator extends Actor with Orchestrator {
         val checks = Seq(tokenF -> "token", roleF -> "role", contentF -> "content")
         val message = checks.collect {
           case (future: OFuture[_], name: String) if !future.isCompleted => name
-        } .mkString("Timed out waiting for: [", ",", s"] after ${timeout.duration}")
+        } .mkString("Timed out waiting for: [", ",", s"] after $duration")
         requester ! Status.Failure(OrchestrationTimeout(message))
         context.stop(self)
     }
