@@ -2,8 +2,9 @@ package com.paypal.myorg.akarasqt1serv.cube
 
 
 import akka.actor.{Actor, ActorLogging}
+import com.paypal.myorg.akarasqt1serv.msgs.AuthenticationFailed
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 case class AuthRequest(user: String, password: String)
 case class AuthResponse(token: Try[String])
@@ -16,9 +17,12 @@ case class ContentResponse(content: Try[String])
 class AuthNActor extends Actor with ActorLogging {
 
   def receive = {
-    case AuthRequest(user, password) =>
-      log.info("Got authn request for user {}, letting it pass", user)
+    case AuthRequest("foo", "bar") =>
+      log.warning("Got authn request for user foo, letting it pass")
       sender() ! AuthResponse(Success("justarandomtoken"))
+    case AuthRequest(user, password) =>
+      log.warning("Got authn request for user {}, denying", user)
+      sender() ! AuthResponse(Failure(AuthenticationFailed("Only accepts user foo pass bar for now")))
   }
 }
 
@@ -26,7 +30,7 @@ class AuthZActor extends Actor with ActorLogging {
 
   def receive = {
     case RoleRequest(user) =>
-      log.info("Got role request from user {}, answering with 'admin'", user)
+      log.warning("Got role request from user {}, answering with 'admin'", user)
       sender() ! RoleResponse(Success("admin"))
   }
 }
@@ -35,7 +39,8 @@ class ContentActor extends Actor with ActorLogging {
 
   def receive = {
     case ContentRequest(token, role, resource) =>
-      log.info("Got content request token: {}, role: {}, resource: {}, sending some mock content")
+      log.warning("Got content request token: {}, role: {}, resource: {}, sending some mock content",
+        token, role, resource)
       sender() ! ContentResponse(Success("Hello, this is some mock content"))
   }
 }

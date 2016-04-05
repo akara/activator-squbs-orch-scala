@@ -2,12 +2,25 @@
 
 ###Get the squbs template application up and running:
 1. Create a squbs mid-tier service in Altus
-2. Clone the newly created repo
-3. Open app in IntelliJ
-4. Note: Depending on bandwidth, this may need time
-5. Open sbt window
-6. Run `extractConfig dev` from sbt window to populate config
-7. Configure `run` in IntelliJ - add AspectJ config
+2. Use IntelliJ to clone the newly created repo.
+
+   Note: Depending on bandwidth, this may need time
+
+3. Fix a configuration bug (note, this step will not apply to future versions of squbs). Edit `{project}servsvc/src/main/resources/META-INF/configuration/Dev/application.conf` and add the `Slf4jLogger` to the logger list.
+
+   ```
+   akka {
+     loggers = [
+       "akka.event.slf4j.Slf4jLogger",
+       "com.ebay.squbs.rocksqubs.cal.publish.CalLogger"
+     ]
+     ...
+   }
+   ```
+
+4. Open sbt window
+5. Run `extractConfig dev` from sbt window to populate config
+6. Configure `run` in IntelliJ - add AspectJ config
    * Click down button and choose “Edit Configurations"
    * Click the `+` sign
    * Choose `application`
@@ -15,16 +28,18 @@
    * Main class: `org.squbs.unicomplex.Bootstrap`
    * VM options: `-javaagent:/Users/asucharitakul/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.5.jar`
    * Working directory: `…/{project}servsvc`
-   * Use classpath of module: `{project}svc`
+   * Use classpath of module: `{project}servsvc`
    * Before launch: … box click `-` to remove `make` and click `+` to choose `SBT`. Select action `compile`
    * Click `OK`
-8. Run the app by pressing the start button with the right arrow
-9. Check the app and registered context
+7. Run the app by pressing the start button with the right arrow
+8. Check the app and registered context
    * Point your browser to `http://localhost:8080/admin/v3console/ValidateInternals`
    * Choose the `Component Status` tab
    * Select the link `org.squbs.unicomplex…::Listeners`
    * See the app registered to Default Listener
-10. Point your browser to `http://localhost:8080/{service}serv/hello`
+9. Point your browser to `http://localhost:8080/{service}serv/hello`
+
+    **Note**: The web context is registered in `squbs-meta.conf` of the service project. It can be any value. The project template is setup to use the service name ending with "serv" as the default.
 11. See squbs in action.
 12. Stop the app.
 13. Run the app from sbt
@@ -70,7 +85,7 @@
 
      def receive = {
        case AuthRequest(user, password) =>
-         log.info("Got authn request for user {}, letting it pass", user)
+         log.warning("Got authn request for user {}, letting it pass", user)
          sender() ! AuthResponse(Success("justarandomtoken"))
      }
    }
@@ -83,7 +98,7 @@
 
      def receive = {
        case RoleRequest(user) =>
-         log.info("Got role request from user {}, answering with 'admin'", user)
+         log.warning("Got role request from user {}, answering with 'admin'", user)
          sender() ! RoleResponse(Success("admin"))
      }
    }
@@ -96,13 +111,14 @@
 
      def receive = {
        case ContentRequest(token, role, resource) =>
-         log.info("Got content request token: {}, role: {}, resource: {}, sending some mock content")
+         log.warning("Got content request token: {}, role: {}, resource: {}, sending some mock content"
+           token, role, resource)
          sender() ! ContentResponse("Hello, this is some mock content")
      }
    }
    ```
    
-2. Register the services and input/output types. Note: Registering the input/output types are optional. This registration tells squbs to start your actors for you. Registering the types allows squbs ActorRegistry to find actors by input and output type. 
+2. Register the actors. This registration tells squbs to start your actors for you as long-running actors. Registering the types allows squbs ActorRegistry to find actors by input and output type. Note: Registering the input/output types is optional and only needed for type-based lookup in the ActorRegistry.
 
    Open file `squbs-meta.conf` in the cube project and replace it to be the followings:
 
@@ -166,8 +182,10 @@ In the {project}msgs project, create new case class OrchestrationRequest/Orchest
 
 
 
-###Create the orchestrator actor and dispatcher
-The orchestration actor is a short-lived actor that only lives one request as it contains the request's intermediate state. Services can create the orchestration actor at will. But to provide through loose coupling from http service and be able to call it from any kind of client, be it messages or otherwise, we front the orchestrator with a long-living dispatcher.
+###Create the orchestrator actor and orchestration dispatcher
+The orchestration actor is a short-lived actor that only lives one request as it contains the request's intermediate state. Services can create the orchestration actor at will. But to provide through loose coupling from http service and be able to call it from any kind of client, be it messages or otherwise, we front the orchestrator with a long-living orchestration dispatcher.
+
+**Note**: The dispatcher has nothing to do with the Akka dispatcher. The name duplication is just coincidence)
 
 1. Edit the `build.sbt` file in `{project}servcube` project and add dependencies to `squbs-pattern` and `squbs-actorregistry` The dependencies will look like below. When saving, IntelliJ will prompt for refreshing the project. Click `Refresh project` on the top of the editor. This may take some time depending on bandwidth.
 
@@ -229,6 +247,8 @@ The orchestration actor is a short-lived actor that only lives one request as it
        p.future
      }
    ```
+
+   **Note**: You may notice that we just use `ActorLookup` as is, without telling what to lookup for. `ActorLookup` tries to figure out by itself what you want, based on the request type provided in the `!` and the ones registered in `squbs-meta.conf`. There are other options of using ActorLookup, by request type, response type, by name, and combination of those. We just show the simple use cases
    
 5. Implement the orchestrate function and orchestration logic. The orchestrate function is the key orchestration logic and is usually placed above the request/response functions.
 
@@ -293,7 +313,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
          case Timeout(duration) =>
            val checks = Seq(tokenF -> "token", roleF -> "role", contentF -> "content")
            val message = checks.collect {
-             case (future: Future[_], name: String) if !future.isCompleted => name
+             case (future, name) if !future.isCompleted => name
            } .mkString("Timed out waiting for: [", ",", s"] after $duration")
            requester ! Status.Failure(OrchestrationTimeout(message))
        }
@@ -309,21 +329,21 @@ The orchestration actor is a short-lived actor that only lives one request as it
    ```
    
    
-9. Create the ContentOrchestrator dispatcher. Remember, the ContentOrchestrator is a single use actor. It gets created per request. So we need to implement the dispatcher:
+9. Create the ContentOrchestrator dispatcher. Remember, the ContentOrchestrator is a single use actor. It gets created per request. So we need to implement the orchestration dispatcher as a long-running, registered actor:
 
    ```scala
-   class Dispatcher extends Actor {
+   class OrchDispatcher extends Actor {
      def receive = {
        case request: OrchestrationRequest => context.actorOf(Props[ContentOrchestrator]) forward request
      }
    }
    ```
    
-10. Last, we need to register the dispatcher. Edit `squbs-meta.conf` of the cube project and add the following actor registration:
+10. Last, we need to register the orchestration dispatcher. Edit `squbs-meta.conf` of the cube project and add the following actor registration:
 
    ```
      {
-       class-name = com.paypal.myorg.{project}serv.cube.Dispatcher
+       class-name = com.paypal.myorg.{project}serv.cube.OrchDispatcher
        name = contentOrchestrator
        message-class = [
          {
@@ -374,7 +394,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
 
      def receive = {
        case RoleRequest(user) =>
-         log.info("Got role request from user {}, answering with 'admin'", user)
+         log.warning("Got role request from user {}, answering with 'admin'", user)
          import context.dispatcher
          context.system.scheduler.scheduleOnce(300 milliseconds, sender(), RoleResponse(Success("admin")))
      }
@@ -400,6 +420,7 @@ prioritizeSource ~> crawlerFlow ~> bCast0 ~> result ~> bCast ~> outLinksFlow ~> 
                                                        bCast ~>                 hdfsWriteSink
                                                        bCast ~> graphFlow    ~>    graphMerge ~> graphSink
                                    bCast0 ~> maxPage             ~>                graphMerge
-                                   bCast0 ~> retry ~> bCastRetry ~> retryFailed ~> graphMerge                                                        bCastRetry ~> errorSink
+                                   bCast0 ~> retry ~> bCastRetry ~> retryFailed ~> graphMerge
+                                                      bCastRetry ~> errorSink
 ```
 

@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 
-class Dispatcher extends Actor {
+class OrchDispatcher extends Actor {
   def receive = {
     case request: OrchestrationRequest => context.actorOf(Props[ContentOrchestrator]) forward request
   }
@@ -64,7 +64,7 @@ class ContentOrchestrator extends Actor with Orchestrator {
       case Timeout(duration) =>
         val checks = Seq(tokenF -> "token", roleF -> "role", contentF -> "content")
         val message = checks.collect {
-          case (future: OFuture[_], name: String) if !future.isCompleted => name
+          case (future, name) if !future.isCompleted => name
         } .mkString("Timed out waiting for: [", ",", s"] after $duration")
         requester ! Status.Failure(OrchestrationTimeout(message))
         context.stop(self)
