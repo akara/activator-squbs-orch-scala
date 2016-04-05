@@ -418,8 +418,8 @@ For instance, here is an actual application's stream flow and corresponding stre
 prioritizeSource ~> crawlerFlow ~> bCast0 ~> result ~> bCast ~> outLinksFlow ~> outLinksSink
                                                        bCast ~> dataSinkFlow ~> dataSink
                                                        bCast ~>                 hdfsWriteSink
-                                                       bCast ~> graphFlow    ~>    graphMerge ~> graphSink
-                                   bCast0 ~> maxPage             ~>                graphMerge
+                                                       bCast ~> graphFlow    ~>    graphMerge ~> graphSink             
+                                   bCast0 ~> maxPage             ~>                graphMerge
                                    bCast0 ~> retry ~> bCastRetry ~> retryFailed ~> graphMerge
                                                       bCastRetry ~> errorSink
 ```
