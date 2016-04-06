@@ -238,7 +238,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
        p.future
      }
 
-     def fetchContent(token: String, role: String)(resource: String): OFuture[String] = {
+     def fetchContent(resource: String)(token: String, role: String): OFuture[String] = {
        val p = OPromise[String]
        ActorLookup ! ContentRequest(token, role, resource)
        expectOnce {
