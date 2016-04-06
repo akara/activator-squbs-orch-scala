@@ -363,7 +363,10 @@ The orchestration actor is a short-lived actor that only lives one request as it
    ~
     path("content" / Segment) { resource =>
       get {
-        parameters('user.as[String], 'pass.as[String]) { (user, pass) =>
+        parameters('user, 'pass) { (user, pass) =>
+          import context.system
+          import context.dispatcher
+          implicit val timeout = Timeout(100 milliseconds)
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {
             case Success(OrchestrationResponse(role, content)) => complete(content)
             case Failure(AuthenticationFailed(msg)) =>
