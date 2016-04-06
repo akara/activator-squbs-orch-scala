@@ -72,7 +72,7 @@
    case class RoleRequest(user: String)
    case class RoleResponse(role: Try[String])
    case class ContentRequest(token: String, role: String, resource: String)
-   case class ContentResponse(content: String)
+   case class ContentResponse(content: Try[String])
    ```
    Note IntelliJ may suggest certain imports. Accept the suggestions. Sometimes there are multiple choices. For `Try` import `scala.util.Try`.
 
