@@ -111,7 +111,7 @@
 
      def receive = {
        case ContentRequest(token, role, resource) =>
-         log.warning("Got content request token: {}, role: {}, resource: {}, sending some mock content"
+         log.warning("Got content request token: {}, role: {}, resource: {}, sending some mock content",
            token, role, resource)
          sender() ! ContentResponse("Hello, this is some mock content")
      }
