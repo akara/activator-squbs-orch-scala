@@ -206,7 +206,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
 2. Create a new Scala class ContentOrchestrator.scala in the `{project}servcube` project.
    * Right click on the `src/main/scala` directory in the project pane
    * Select `new` -> `Scala Class`
-   * Enter class name with package: `com.paypal.myorg.{project}.cube.Orchestrator`
+   * Enter class name with package: `com.paypal.myorg.{project}.cube.ContentOrchestrator`
 
 3. Create the ContentOrchestrator actor and `import context.system` as we need to use the `ActorSystem` as context for many calls.
 
@@ -319,6 +319,8 @@ The orchestration actor is a short-lived actor that only lives one request as it
        }
      }   
    ```
+   
+   **Note**: If we are called by an `ask` or `?`, then we can send a `akka.actor.Status.Failure` as the response to indicate the failure. This will cause the Future held as part of the ask to fail. Since the Orchestrator is usually called with `?`, the best path of error handling is actually  
    
 8. Expect initial orchestration request. This code is to be put ahead of the orchestration function in the ContentOrchestrator class.
 
