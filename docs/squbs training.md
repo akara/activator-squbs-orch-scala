@@ -320,7 +320,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
      }   
    ```
    
-   **Note**: If we are called by an `ask` or `?`, then we can send a `akka.actor.Status.Failure` as the response to indicate the failure. This will cause the Future held as part of the ask to fail. Since the Orchestrator is usually called with `?`, the best path of error handling is actually  
+   **Note**: If we are called by an `ask` or `?`, then we can send a `akka.actor.Status.Failure` as the response to indicate the failure. This will cause the Future held as part of the ask to fail. Since the Orchestrator is usually called with `?`, the best path of error handling is actually using this `akka.actor.Status.Failure` message type. 
    
 8. Expect initial orchestration request. This code is to be put ahead of the orchestration function in the ContentOrchestrator class.
 
@@ -420,7 +420,7 @@ For instance, here is an actual application's stream flow and corresponding stre
 ![Stream Flow](streams.png)
 
 ```scala
-prioritizeSource ~> crawlerFlow ~> bCast0 ~> result ~> bCast ~> outLinksFlow ~> outLinksSink
+prioritizeSource ~> crawlerFlow ~> bCast0 ~> result ~> bCast ~> outLinksFlow ~> outLinksSink
                                                        bCast ~> dataSinkFlow ~> dataSink
                                                        bCast ~>                 hdfsWriteSink
                                                        bCast ~> graphFlow    ~>    graphMerge ~> graphSink             
