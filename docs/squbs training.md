@@ -382,7 +382,8 @@ The orchestration actor is a short-lived actor that only lives one request as it
             case Failure(e: AskTimeoutException) =>
               complete(StatusCodes.RequestTimeout, e.getMessage)
             case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage)
-            case _ => complete(StatusCodes.InternalServerError, "Unknown error")          }
+            case e => complete(StatusCodes.InternalServerError, s"Unknown error: $e")
+          }
         }
       }
     }

@@ -64,7 +64,7 @@ class Akarasqt1servSvc extends RouteDefinition {
             case Failure(e: AskTimeoutException) =>
               complete(StatusCodes.RequestTimeout, e.getMessage)
             case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage)
-            case _ => complete(StatusCodes.InternalServerError, "Unknown error")
+            case e => complete(StatusCodes.InternalServerError, s"Unknown error: $e")
           }
         }
       }
