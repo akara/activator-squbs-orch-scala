@@ -371,16 +371,11 @@ The orchestration actor is a short-lived actor that only lives one request as it
           implicit val timeout = Timeout(100 milliseconds)
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {
             case Success(OrchestrationResponse(role, content)) => complete(content)
-            case Failure(AuthenticationFailed(msg)) =>
-              complete(StatusCodes.Unauthorized, msg)
-            case Failure(AuthorizationFailed(msg)) =>
-              complete(StatusCodes.Unauthorized, msg)
-            case Failure(InvalidResource(msg)) =>
-              complete(StatusCodes.NotFound, msg)
-            case Failure(OrchestrationTimeout(msg)) =>
-              complete(StatusCodes.RequestTimeout, msg)
-            case Failure(e: AskTimeoutException) =>
-              complete(StatusCodes.RequestTimeout, e.getMessage)
+            case Failure(AuthenticationFailed(msg)) => complete(StatusCodes.Unauthorized, msg)
+            case Failure(AuthorizationFailed(msg)) => complete(StatusCodes.Unauthorized, msg)
+            case Failure(InvalidResource(msg)) => complete(StatusCodes.NotFound, msg)
+            case Failure(OrchestrationTimeout(msg)) => complete(StatusCodes.RequestTimeout, msg)
+            case Failure(e: AskTimeoutException) => complete(StatusCodes.RequestTimeout, e.getMessage)
             case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage)
             case e => complete(StatusCodes.InternalServerError, s"Unknown error: $e")
           }
