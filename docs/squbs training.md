@@ -113,7 +113,7 @@
        case ContentRequest(token, role, resource) =>
          log.warning("Got content request token: {}, role: {}, resource: {}, sending some mock content",
            token, role, resource)
-         sender() ! ContentResponse("Hello, this is some mock content")
+         sender() ! ContentResponse(Success("Hello, this is some mock content"))
      }
    }
    ```
@@ -316,6 +316,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
              case (future, name) if !future.isCompleted => name
            } .mkString("Timed out waiting for: [", ",", s"] after $duration")
            requester ! Status.Failure(OrchestrationTimeout(message))
+           context.stop(self)
        }
      }   
    ```
