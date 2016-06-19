@@ -48,7 +48,6 @@ class Akarasqt1servSvc extends RouteDefinition {
     path("content" / Segment) { resource =>
       get {
         parameters('user, 'pass) { (user, pass) =>
-          import context.system
           import context.dispatcher
           implicit val timeout = Timeout(100 milliseconds)
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {

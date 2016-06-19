@@ -1,8 +1,8 @@
 import _root_.sbt.Keys._
 
-val akkaV = "2.3.13"
+val akkaV = "2.4.7"
 
-val squbsV = "0.7.1"
+val squbsV = "0.8.0"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaV,

@@ -5,7 +5,7 @@ resolvers ++= Seq(
   "Maven Central Proxy" at "https://paypalcentral.es.paypalcorp.com/nexus/content/repositories/central/"
 )
 
-addSbtPlugin("com.ebay.squbs" % "sbt-ebay" % "0.7.1")
+addSbtPlugin("com.ebay.squbs" % "sbt-ebay" % "0.8.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-aspectj" % "0.9.4")
 

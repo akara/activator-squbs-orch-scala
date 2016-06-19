@@ -7,9 +7,12 @@ Revolver.settings
 
 val sprayV = "1.3.3"
 
-val akkaV = "2.3.13"
+val akkaV = "2.4.7"
 
-val squbsV = "0.7.1"
+val squbsV = "0.8.0"
+
+// TODO This is temporary.  You will delete this line in 0.8.1.
+dependencyOverrides += "com.ebay.aero" % "cal-client-impl" % "3.0.1"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaV,
@@ -28,7 +31,7 @@ libraryDependencies ++= Seq(
   "com.ebay.squbs" %% "rocksqubs-paypalcfg" % squbsV,
   "com.ebay.squbs" %% "rocksqubs-perfmon" % squbsV,
   "com.ebay.squbs" %% "rocksqubs-vi" % squbsV,
-  "com.ebay.squbs" %% "rocksqubs-pipeline" % squbsV,
+  "com.ebay.squbs" %% "rocksqubs-paypalpipeline" % squbsV,
   "com.ebay.squbs" %% "rocksqubs-paypalprofile" % squbsV,
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "org.squbs" %% "squbs-testkit" % squbsV % "test"

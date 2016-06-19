@@ -17,7 +17,6 @@ class OrchDispatcher extends Actor {
 }
 
 class ContentOrchestrator extends Actor with Orchestrator {
-  import context.system
 
   expectOnce {
     case request: OrchestrationRequest => orchestrate(request, sender())

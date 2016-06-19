@@ -208,11 +208,10 @@ The orchestration actor is a short-lived actor that only lives one request as it
    * Select `new` -> `Scala Class`
    * Enter class name with package: `com.paypal.myorg.{project}.cube.ContentOrchestrator`
 
-3. Create the ContentOrchestrator actor and `import context.system` as we need to use the `ActorSystem` as context for many calls.
+3. Create the ContentOrchestrator actor.
 
    ```scala
    class ContentOrchestrator extends Actor with Orchestrator {
-     import context.system
    
    }
    ```
@@ -367,7 +366,6 @@ The orchestration actor is a short-lived actor that only lives one request as it
     path("content" / Segment) { resource =>
       get {
         parameters('user, 'pass) { (user, pass) =>
-          import context.system
           import context.dispatcher
           implicit val timeout = Timeout(100 milliseconds)
           onComplete(ActorLookup ? OrchestrationRequest(user, pass, resource)) {
