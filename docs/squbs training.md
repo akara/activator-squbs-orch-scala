@@ -6,52 +6,40 @@
 
    Note: Depending on bandwidth, this may need time
 
-3. Fix a configuration bug (note, this step will not apply to future versions of squbs). Edit `{project}servsvc/src/main/resources/META-INF/configuration/Dev/application.conf` and add the `Slf4jLogger` to the logger list.
-
-   ```
-   akka {
-     loggers = [
-       "akka.event.slf4j.Slf4jLogger",
-       "com.ebay.squbs.rocksqubs.cal.publish.CalLogger"
-     ]
-     ...
-   }
-   ```
-
-4. Open sbt window
-5. Run `extractConfig dev` from sbt window to populate config
-6. Configure `run` in IntelliJ - add AspectJ config
+3. Open sbt window
+4. Run `extractConfig dev` from sbt window to populate config
+5. Configure `run` in IntelliJ - add AspectJ config
    * Click down button and choose “Edit Configurations"
    * Click the `+` sign
    * Choose `application`
    * Name: `runapp`
    * Main class: `org.squbs.unicomplex.Bootstrap`
-   * VM options: `-javaagent:/Users/asucharitakul/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.5.jar`
+   * VM options: `-javaagent:/Users/{my_login}/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.5.jar`
    * Working directory: `…/{project}servsvc`
    * Use classpath of module: `{project}servsvc`
    * Before launch: … box click `-` to remove `make` and click `+` to choose `SBT`. Select action `compile`
    * Click `OK`
-7. Run the app by pressing the start button with the right arrow
-8. Check the app and registered context
+6. Run the app by pressing the start button with the right arrow
+7. Check the app and registered context
    * Point your browser to `http://localhost:8080/admin/v3console/ValidateInternals`
    * Choose the `Component Status` tab
    * Select the link `org.squbs.unicomplex…::Listeners`
    * See the app registered to Default Listener
-9. Point your browser to `http://localhost:8080/{service}serv/hello`
+8. Point your browser to `http://localhost:8080/{service}serv/hello`
 
     **Note**: The web context is registered in `squbs-meta.conf` of the service project. It can be any value. The project template is setup to use the service name ending with "serv" as the default.
-11. See squbs in action.
-12. Stop the app.
-13. Run the app from sbt
+9. See squbs in action.
+10. Stop the app.
+11. Run the app from sbt
    * Go to sbt window
    * `project {project}svc`
    * `~re-start` (The `~` is telling sbt to re-run that command every time a change is detected, like `~compile` would recompile every time a file changes
-14. Make a modification to the app.
+12. Make a modification to the app.
    * Edit the RouteDefinition file *Svc.scala
    * Change service name to “My Service”
    * Save
-15. Watch sbt re-starting your app
-16. Stop the app in sbt
+13. Watch sbt re-starting your app
+14. Stop the app in sbt
    * `re-stop`
 
 ###Architecture of Simple Orchestration App:
