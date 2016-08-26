@@ -17,7 +17,7 @@
    * VM options: `-javaagent:/Users/{my_login}/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.5.jar`
    * Working directory: `…/{project}servsvc`
    * Use classpath of module: `{project}servsvc`
-   * Before launch: … box click `-` to remove `make` and click `+` to choose `SBT`. Select action `compile`
+   * Before launch: … box click `-` to remove `make` and click `+` to choose `SBT`. Select action `test:products`, the default.
    * Click `OK`
 6. Run the app by pressing the start button with the right arrow
 7. Check the app and registered context
@@ -345,7 +345,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
    ```
 
 ###Modify the Http service to call the orchestrator
-1. Open the route class `{Project}servSvcIn` the `{projce}servsvc` project.
+1. Open the route class `{Project}servSvc` in the `{projce}servsvc` project.
 2. If there is a `Mediator` actor in the source, remove it.
 3. Add the following directives to the route. This will route a request with `http://localhost:8080/{project}serv/content/foo?user=sombody&pass=somepass` to the orchestrator:
 
