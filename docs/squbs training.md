@@ -1,42 +1,42 @@
 ##squbs Training - Your first Async Orchestrator
 
+###Prerequisistes for this exercise
+
+- JDK 8. This code has been tested with 1.8.0_60 and should work with later versions of Java 8.
+- IntelliJ is preferred as the IDE as the instructions are based on IntelliJ. We need these plugins for IntelliJ:
+   - The Scala plugin
+   - The sbt plugin - this plugin is not on the primary list of plugins. You need to click `Browse repositories...` and search for **sbt** from this screen.
+
+
 ###Get the squbs template application up and running:
-1. Create a squbs mid-tier service in Altus
-2. Use IntelliJ to clone the newly created repo.
-
-   Note: Depending on bandwidth, this may need time
-
-3. Open sbt window
-4. Run `extractConfig dev` from sbt window to populate config
-5. Configure `run` in IntelliJ - add AspectJ config
+1. Clone this repo into a local project.
+2. Use IntelliJ to open this project by opening the `build.sbt` file from the root project (not the subprojects). Opening the root project directory directly works most of the time but is not as reliable as selecting the `build.sbt` file.
+3. Configure `run` in IntelliJ
    * Click down button and choose “Edit Configurations"
    * Click the `+` sign
    * Choose `application`
-   * Name: `runapp`
+   * Name: `RunApp`
    * Main class: `org.squbs.unicomplex.Bootstrap`
-   * VM options: `-javaagent:/Users/{my_login}/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.5.jar`
-   * Working directory: `…/{project}servsvc`
-   * Use classpath of module: `{project}servsvc`
+   * Working directory: `orchsamplesvc`
+   * Use classpath of module: `orchsamplesvc`
    * Before launch: … box click `-` to remove `make` and click `+` to choose `SBT`. Select action `test:products`, the default.
    * Click `OK`
-6. Run the app by pressing the start button with the right arrow
-7. Check the app and registered context
-   * Point your browser to `http://localhost:8080/admin/v3console/ValidateInternals`
-   * Choose the `Component Status` tab
-   * Select the link `org.squbs.unicomplex…::Listeners`
-   * See the app registered to Default Listener
-8. Point your browser to `http://localhost:8080/{service}serv/hello`
+4. Run the app by pressing the start button with the right arrow
+5. Check the app and registered context
+   * Point your browser to `http://localhost:8080/adm` for the admin console. Note: The result is JSON and it is useful to have a JSON plugin in your browser allowing URL navigations.
+   * To ensure the application listens to the root context, find the `Listeners` link or go directly to `http://localhost:8080/adm/bean/org.squbs.unicomplex:type~Listeners`. You'll see the application registered to the root context `""` and the admin console registered to the `"adm"` context on the `default-listener`.
+   * To see all the registered "cubes" or modules, find the `Cubes` link or go directly to `http://localhost:8080/adm/bean/org.squbs.unicomplex:type~Cubes`. You'll see `OrchSampleCube` and `OrchSampleSvc` registered. The `orchsamplemsgs` project only defines the message types for communication between `cubes`. It does not define a `cube` by itself.
+   * 8. Point your browser to `http://localhost:8080/hello`
 
-    **Note**: The web context is registered in `squbs-meta.conf` of the service project. It can be any value. The project template is setup to use the service name ending with "serv" as the default.
-9. See squbs in action.
-10. Stop the app.
-11. Run the app from sbt
+    **Note**: The web context is registered in `squbs-meta.conf` of the service project. It can be any value. The project template is setup to use the root context `""` by default.
+6. See your application in action.10. Stop the app.
+7. Run the app from sbt
    * Go to sbt window
-   * `project {project}svc`
+   * `project orchsamplesvc`
    * `~re-start` (The `~` is telling sbt to re-run that command every time a change is detected, like `~compile` would recompile every time a file changes
 12. Make a modification to the app.
-   * Edit the RouteDefinition file *Svc.scala
-   * Change service name to “My Service”
+   * Edit the `SampleOrchestrationService.scala` file under the `orchsamplesvc` project
+   * Change "SampleOrchestrationService" name to "My Service" in the response xml
    * Save
 13. Watch sbt re-starting your app
 14. Stop the app in sbt
@@ -45,13 +45,16 @@
 ###Architecture of Simple Orchestration App:
 ![Orchestrator Architecture](orchestrator.png)
 
+###Disclaimer:
+The following steps are already done for this sample project you can remove the files and start over to learn getting it together from scratch, or just review the steps to get a clear understanding what the project does.
+
 ###Create messages for the mock services:
 
 1. In the cube project, create `src/main/scala` if not exists
 2. Create a new Scala class: MockServices.scala
    * Right click on the `src/main/scala` directory in the project pane
    * Select `new` -> `Scala Class`
-   * Enter class name with package: `com.paypal.myorg.{project}.cube.MockServices`
+   * Enter class name with package: `org.squbs.orchsample.cube.MockServices`
 3. Implement all the request/response types to the mock service before and outside any class:
 
    ```scala
@@ -111,36 +114,36 @@
    Open file `squbs-meta.conf` in the cube project and replace it to be the followings:
 
   ```
-  cube-name = com.paypal.myorg.{project}servcube
+  cube-name = org.squbs.OrchSampleCube
   cube-version = "0.0.1-SNAPSHOT"
   squbs-actors = [
     {
-      class-name = com.paypal.myorg.{project}serv.cube.AuthNActor
+      class-name = org.squbs.orchsample.cube.AuthNActor
       name = authNActor
       message-class = [
         {
-          request = com.paypal.myorg.{project}serv.cube.AuthRequest
-          response = com.paypal.myorg.{project}serv.cube.AuthResponse
+          request = org.squbs.orchsample.cube.AuthRequest
+          response = org.squbs.orchsample.cube.AuthResponse
         }
       ]
     }
     {
-      class-name = com.paypal.myorg.{project}serv.cube.AuthZActor
+      class-name = org.squbs.orchsample.cube.AuthZActor
       name = authZActor
       message-class = [
         {
-          request = com.paypal.myorg.{project}serv.cube.RoleRequest
-          response = com.paypal.myorg.{project}serv.cube.RoleResponse
+          request = org.squbs.orchsample.cube.RoleRequest
+          response = org.squbs.orchsample.cube.RoleResponse
         }
       ]
     }
     {
-      class-name = com.paypal.myorg.{project}serv.cube.ContentActor
+      class-name = org.squbs.orchsample.cube.ContentActor
       name = contentActor
       message-class = [
         {
-          request = com.paypal.myorg.{project}serv.cube.ContentRequest
-          response = com.paypal.myorg.{project}serv.cube.ContentResponse
+          request = org.squbs.orchsample.cube.ContentRequest
+          response = org.squbs.orchsample.cube.ContentResponse
         }
       ]
     }
@@ -148,10 +151,10 @@
   ```
 
 ###Create the orchestration messages
-In the {project}msgs project, create new case class OrchestrationRequest/OrchestrationResponse. This is for service to send request/response to the orchestrator logic.
+In the orchsamplemsgs project, create new case class OrchestrationRequest/OrchestrationResponse. This is for service to send request/response to the orchestrator logic.
 
 1. If the `src/main/scala` does not exist, create the directory by right-clicking on `src/main` in the project pane, select `New`->`Directory` and name the directory `scala`.
-2. Right click on the `scala` directory and create a new Scala class by selecting `New`->`Scala Class`. Then name the class `com.paypal.myorg.{project}serv.msgs.OrchestrationMessages`.
+2. Right click on the `scala` directory and create a new Scala class by selecting `New`->`Scala Class`. Then name the class `org.squbs.orchsample.msgs.OrchestrationMessages`.
 3. Enter the following content in the class.
 
    ```scala
@@ -175,7 +178,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
 
 **Note**: The dispatcher has nothing to do with the Akka dispatcher. The name duplication is just coincidence)
 
-1. Edit the `build.sbt` file in `{project}servcube` project and add dependencies to `squbs-pattern` and `squbs-actorregistry` The dependencies will look like below. When saving, IntelliJ will prompt for refreshing the project. Click `Refresh project` on the top of the editor. This may take some time depending on bandwidth.
+1. Edit the `build.sbt` file in `orchsamplecube` project and add dependencies to `squbs-pattern` and `squbs-actorregistry` The dependencies will look like below. When saving, IntelliJ will prompt for refreshing the project. Click `Refresh project` on the top of the editor. This may take some time depending on bandwidth.
 
    ```scala
    libraryDependencies ++= Seq(
@@ -184,17 +187,16 @@ The orchestration actor is a short-lived actor that only lives one request as it
      "org.squbs" %% "squbs-unicomplex" % squbsV,
      "org.squbs" %% "squbs-pattern" % squbsV,
      "org.squbs" %% "squbs-actorregistry" % squbsV,
-     "com.ebay.squbs" %% "rocksqubs-kernel" % squbsV,
      "org.scalatest" %% "scalatest" % "2.2.1" % "test",
      "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
      "org.squbs" %% "squbs-testkit" % squbsV % "test"
    )
    ```
    
-2. Create a new Scala class ContentOrchestrator.scala in the `{project}servcube` project.
+2. Create a new Scala class `ContentOrchestrator.scala` in the `orchsamplecube` project.
    * Right click on the `src/main/scala` directory in the project pane
    * Select `new` -> `Scala Class`
-   * Enter class name with package: `com.paypal.myorg.{project}.cube.ContentOrchestrator`
+   * Enter class name with package: `org.squbs.orchsample.cube.ContentOrchestrator`
 
 3. Create the ContentOrchestrator actor.
 
@@ -333,21 +335,21 @@ The orchestration actor is a short-lived actor that only lives one request as it
 
    ```
      {
-       class-name = com.paypal.myorg.{project}serv.cube.OrchDispatcher
+       class-name = org.squbs.orchsample.cube.OrchDispatcher
        name = contentOrchestrator
        message-class = [
          {
-           request = com.paypal.myorg.{project}serv.msgs.OrchestrationRequest
-           response = com.paypal.myorg.{project}serv.msgs.OrchestrationResponse
+           request = org.squbs.orchsample.msgs.OrchestrationRequest
+           response = org.squbs.orchsample.msgs.OrchestrationResponse
          }
        ]
      }
    ```
 
 ###Modify the Http service to call the orchestrator
-1. Open the route class `{Project}servSvc` in the `{projce}servsvc` project.
+1. Open the route class `SampleOrchestrationService` in the `orchsamplesvc` project.
 2. If there is a `Mediator` actor in the source, remove it.
-3. Add the following directives to the route. This will route a request with `http://localhost:8080/{project}serv/content/foo?user=sombody&pass=somepass` to the orchestrator:
+3. Add the following directives to the route. This will route a request with `http://localhost:8080/content/foo?user=sombody&pass=somepass` to the orchestrator:
 
    ```scala
    ~
@@ -374,7 +376,7 @@ The orchestration actor is a short-lived actor that only lives one request as it
    These directives will match the path and parameters, call the orchestrator asynchronously, and interpret the response from the orchestrator into HTTP status codes.
 
 ###Run the project
-1. Re-run your project and test with the following URL from your browser: `http://localhost:8080/{project}serv/content/foo?user=sombody&pass=somepass`
+1. Re-run your project and test with the following URL from your browser: `http://localhost:8080/content/foo?user=sombody&pass=somepass`
 2. Optional, add time delays to authentication or authorization actors and see the timeout behavior as well as the asynchronous behavior through logging, as in the example below:
 
    ```scala
@@ -390,25 +392,6 @@ The orchestration actor is a short-lived actor that only lives one request as it
 
    ```
    
-   **NOTE**: It is a **crime** to call Thread.sleep in this architecture. It blocks the thread and brings your application to a crawl instantaneously. If you need to make sure something happens in the future, use the system scheduler. This can be accessed from an actor through `context.system.scheduler`. 
-
-
-###Perpetual Streams
-Another pattern squbs formally supports is the Perpetual Stream pattern using the Akka Streams technology. Messages can be sent into streams from http or other messaging systems such as Kafka. Streams may be used to transform messages, route messages, or even make service calls to enrich the messages on the stream.
-
-We won't be able to cover perpetual streams more than giving an glimpse today.
-
-For instance, here is an actual application's stream flow and corresponding streams definition:
-
-![Stream Flow](streams.png)
-
-```scala
-prioritizeSource ~> crawlerFlow ~> bCast0 ~> result ~> bCast ~> outLinksFlow ~> outLinksSink
-                                                       bCast ~> dataSinkFlow ~> dataSink
-                                                       bCast ~>                 hdfsWriteSink
-                                                       bCast ~> graphFlow    ~>    graphMerge ~> graphSink             
-                                   bCast0 ~> maxPage             ~>                graphMerge
-                                   bCast0 ~> retry ~> bCastRetry ~> retryFailed ~> graphMerge
-                                                      bCastRetry ~> errorSink
-```
-
+   **NOTE**: It is a **crime** to call Thread.sleep in this architecture. It blocks the thread and brings your application to a crawl instantaneously. If you need to make sure something happens in the future, use the system scheduler. This can be accessed from an actor through `context.system.scheduler`.
+   
+###Finally, go hack and have fun!

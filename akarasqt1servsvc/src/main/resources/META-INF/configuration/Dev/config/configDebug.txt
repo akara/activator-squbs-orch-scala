@@ -1,4 +1,0 @@
-SendBufferSize: 512000
-Environment: paypal
-PoolName: akarasqt1serv
-SiteViewAddr: cal-dev-vip.qa.paypal.com
